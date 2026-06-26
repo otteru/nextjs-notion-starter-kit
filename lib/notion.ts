@@ -12,6 +12,7 @@ import {
   navigationLinks,
   navigationStyle
 } from './config'
+import { getNormalizedPage } from './get-normalized-page'
 import { getTweetsMap } from './get-tweets'
 import { notion } from './notion-api'
 import { getPreviewImageMap } from './preview-images'
@@ -26,7 +27,7 @@ const getNavigationLinkPages = pMemoize(
       return pMap(
         navigationLinkPageIds,
         async (navigationLinkPageId) =>
-          notion.getPage(navigationLinkPageId, {
+          getNormalizedPage(notion, navigationLinkPageId, {
             chunkLimit: 1,
             fetchMissingBlocks: false,
             fetchCollections: false,
@@ -43,7 +44,7 @@ const getNavigationLinkPages = pMemoize(
 )
 
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
-  let recordMap = await notion.getPage(pageId)
+  let recordMap = await getNormalizedPage(notion, pageId)
 
   if (navigationStyle !== 'default') {
     // ensure that any pages linked to in the custom navigation header have
