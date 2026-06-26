@@ -52,7 +52,7 @@ function normalizeSearchResults(
         tableName,
         unwrapRecordTable(table)
       ])
-    ) as types.SearchResults['recordMap']
+    ) as unknown as types.SearchResults['recordMap']
   }
 }
 

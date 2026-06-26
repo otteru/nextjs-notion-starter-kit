@@ -25,6 +25,28 @@
   --notion-max-width: 900px;
 }
 
+.site-search-bridge .notion-search-button {
+  display: none !important;
+}
+
+.notion-page-cover-wrapper {
+  display: none !important;
+}
+
+.notion-page-icon-hero {
+  display: none !important;
+}
+
+.index-page .notion-page-cover-wrapper,
+.index-page .notion-title {
+  display: none !important;
+}
+
+.index-page.notion-page {
+  position: relative;
+  padding-top: 32px;
+}
+
 .notion-text {
   padding: 0.5em 2px;
 }
@@ -400,6 +422,6 @@
   color: var(--fg-color-2);
 }
 
-.notion-equation.notion-equation-block{
+.notion-equation.notion-equation-block {
   align-items: center;
 }

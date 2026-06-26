@@ -9,12 +9,12 @@ export default siteConfig({
   rootNotionSpaceId: null,
 
   // basic site info (required)
-  name: 'Yudam\'s Blog',
+  name: "Yudam's Blog",
   domain: 'yudam.com',
   author: 'Yudam Kim',
 
   // open graph metadata (optional)
-  description: 'Yudam\'s Blog',
+  description: "Yudam's Blog",
 
   // social usernames (optional)
   twitter: '',
@@ -46,7 +46,9 @@ export default siteConfig({
   //   '/foo': '067dd719a912471ea9a3ac10710e7fdf',
   //   '/bar': '0be6efce9daf42688f65c76b89f8eb27'
   // }
-  pageUrlOverrides: null,
+  pageUrlOverrides: {
+    '/about': '38b210261e95805d8028c9f2ed6a863a'
+  },
 
   // whether to use the default notion navigation style or a custom one with links to
   // important pages. To use `navigationLinks`, set `navigationStyle` to `custom`.

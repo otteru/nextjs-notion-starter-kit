@@ -1,0 +1,92 @@
+.sidebar {
+  position: fixed;
+  top: 148px;
+  left: calc((100vw - var(--notion-max-width)) / 2 - 220px);
+  z-index: 101;
+  width: 180px;
+  padding: 4px 0;
+  color: var(--fg-color);
+}
+
+.title {
+  margin: 0 0 10px;
+  padding: 0 2px;
+  color: var(--fg-color-3);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.button {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--fg-color-3);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-align: left;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease;
+}
+
+.button:hover {
+  color: var(--fg-color);
+  background: var(--bg-color-0);
+  transform: translateX(2px);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
+}
+
+.active {
+  color: var(--fg-color);
+  background: var(--bg-color-1);
+}
+
+.count {
+  flex: 0 0 auto;
+  color: var(--fg-color-2);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+@media (max-width: 1280px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 18px;
+  }
+
+  .list {
+    flex-flow: row wrap;
+    gap: 8px;
+  }
+
+  .button {
+    width: auto;
+    min-height: 30px;
+  }
+}

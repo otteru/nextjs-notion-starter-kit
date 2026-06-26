@@ -10,18 +10,26 @@ import BodyClassName from 'react-body-classname'
 import {
   type NotionComponents,
   NotionRenderer,
+  Search,
   useNotionContext
 } from 'react-notion-x'
 import { EmbeddedTweet, TweetNotFound, TweetSkeleton } from 'react-tweet'
 import { useSearchParam } from 'react-use'
 
 import type * as types from '@/lib/types'
+import {
+  filterRecordMapByPart,
+  filterRecordMapByProject,
+  getBlogCategories,
+  getProjectCategories
+} from '@/lib/blog-categories'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
+import { BlogCategorySidebar } from './BlogCategorySidebar'
 import { Footer } from './Footer'
 import { Loading } from './Loading'
 import { NotionPageHeader } from './NotionPageHeader'
@@ -182,6 +190,8 @@ const propertyTextValue = (
   return defaultFn()
 }
 
+type SiteSection = 'blog' | 'project' | 'about'
+
 export function NotionPage({
   site,
   recordMap,
@@ -213,6 +223,39 @@ export function NotionPage({
   const isLiteMode = lite === 'true'
 
   const { isDarkMode } = useDarkMode()
+  const [isShowingSearch, setIsShowingSearch] = React.useState(false)
+  const [selectedSection, setSelectedSection] =
+    React.useState<SiteSection>('blog')
+  const [selectedBlogCategory, setSelectedBlogCategory] =
+    React.useState<string>()
+  const [selectedProjectCategory, setSelectedProjectCategory] =
+    React.useState<string>()
+
+  React.useEffect(() => {
+    const openSearch = () => {
+      setIsShowingSearch(true)
+    }
+
+    window.addEventListener('yudam:open-search', openSearch)
+
+    return () => {
+      window.removeEventListener('yudam:open-search', openSearch)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    const updateSection = (event: Event) => {
+      const section = (event as CustomEvent<SiteSection>).detail
+
+      setSelectedSection(section)
+    }
+
+    window.addEventListener('yudam:section-change', updateSection)
+
+    return () => {
+      window.removeEventListener('yudam:section-change', updateSection)
+    }
+  }, [])
 
   const siteMapPageUrl = React.useMemo(() => {
     const params: any = {}
@@ -229,6 +272,65 @@ export function NotionPage({
   //   parsePageId(block?.id) === parsePageId(site?.rootNotionPageId)
   const isBlogPost =
     block?.type === 'page' && block?.parent_table === 'collection'
+  const isRootPage = pageId === site?.rootNotionPageId
+  const blogCategories = React.useMemo(
+    () => (recordMap ? getBlogCategories(recordMap) : []),
+    [recordMap]
+  )
+  const projectCategories = React.useMemo(
+    () => (recordMap ? getProjectCategories(recordMap) : []),
+    [recordMap]
+  )
+
+  React.useEffect(() => {
+    setSelectedBlogCategory((currentCategory) => {
+      const hasCurrentCategory = blogCategories.some(
+        (category) => category.name === currentCategory
+      )
+
+      if (hasCurrentCategory) {
+        return currentCategory
+      }
+
+      return blogCategories[0]?.name
+    })
+  }, [blogCategories])
+
+  React.useEffect(() => {
+    setSelectedProjectCategory((currentCategory) => {
+      const hasCurrentCategory = projectCategories.some(
+        (category) => category.name === currentCategory
+      )
+
+      if (hasCurrentCategory) {
+        return currentCategory
+      }
+
+      return projectCategories[0]?.name
+    })
+  }, [projectCategories])
+
+  const visibleRecordMap = React.useMemo(() => {
+    if (!recordMap || !isRootPage) {
+      return recordMap
+    }
+
+    if (selectedSection === 'blog') {
+      return filterRecordMapByPart(recordMap, selectedBlogCategory)
+    }
+
+    if (selectedSection === 'project') {
+      return filterRecordMapByProject(recordMap, selectedProjectCategory)
+    }
+
+    return recordMap
+  }, [
+    isRootPage,
+    recordMap,
+    selectedBlogCategory,
+    selectedProjectCategory,
+    selectedSection
+  ])
 
   const showTableOfContents = !!isBlogPost
   const minTableOfContentsItems = 3
@@ -309,11 +411,12 @@ export function NotionPage({
         )}
         darkMode={isDarkMode}
         components={components}
-        recordMap={recordMap}
+        recordMap={visibleRecordMap!}
         rootPageId={site.rootNotionPageId}
         rootDomain={site.domain}
         fullPage={!isLiteMode}
-        previewImages={!!recordMap.preview_images}
+        disableHeader={true}
+        previewImages={!!visibleRecordMap?.preview_images}
         showCollectionViewDropdown={false}
         showTableOfContents={showTableOfContents}
         minTableOfContentsItems={minTableOfContentsItems}
@@ -323,6 +426,32 @@ export function NotionPage({
         mapPageUrl={siteMapPageUrl}
         mapImageUrl={mapImageUrl}
         searchNotion={config.isSearchEnabled ? searchNotion : undefined}
+        isShowingSearch={isShowingSearch}
+        onHideSearch={() => setIsShowingSearch(false)}
+        header={
+          config.isSearchEnabled ? (
+            <div className='site-search-bridge'>
+              <Search block={block} title={null} />
+            </div>
+          ) : undefined
+        }
+        pageHeader={
+          isRootPage && selectedSection === 'blog' ? (
+            <BlogCategorySidebar
+              title='Part'
+              categories={blogCategories}
+              activeCategory={selectedBlogCategory}
+              onSelectCategory={setSelectedBlogCategory}
+            />
+          ) : isRootPage && selectedSection === 'project' ? (
+            <BlogCategorySidebar
+              title='Project'
+              categories={projectCategories}
+              activeCategory={selectedProjectCategory}
+              onSelectCategory={setSelectedProjectCategory}
+            />
+          ) : undefined
+        }
         pageAside={pageAside}
         footer={footer}
       />
