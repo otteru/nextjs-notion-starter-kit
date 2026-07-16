@@ -1,7 +1,13 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type ExtendedRecordMap } from 'notion-types'
 
 import type * as types from '../../lib/types'
 import { search } from '../../lib/notion'
+import {
+  getPageBlock,
+  getPageLanguage,
+  isSiteLanguage
+} from '../../lib/site-language'
 
 type RecordObject = Record<string, unknown>
 
@@ -56,6 +62,31 @@ function normalizeSearchResults(
   }
 }
 
+function filterSearchResultsByLanguage(
+  results: types.SearchResults,
+  language: types.LocalizedSearchParams['language']
+): types.SearchResults {
+  if (!language) {
+    return results
+  }
+
+  const recordMap = results.recordMap as ExtendedRecordMap
+  const filteredResults = results.results.filter((result) => {
+    const pageLanguage = getPageLanguage(
+      getPageBlock(recordMap, result.id),
+      recordMap
+    )
+
+    return !pageLanguage || pageLanguage === language
+  })
+
+  return {
+    ...results,
+    results: filteredResults,
+    total: filteredResults.length
+  }
+}
+
 export default async function searchNotion(
   req: NextApiRequest,
   res: NextApiResponse
@@ -64,10 +95,17 @@ export default async function searchNotion(
     return res.status(405).send({ error: 'method not allowed' })
   }
 
-  const searchParams: types.SearchParams = req.body
+  const searchParams: types.LocalizedSearchParams = req.body
+  const { language: requestedLanguage, ...notionSearchParams } = searchParams
+  const language = isSiteLanguage(requestedLanguage)
+    ? requestedLanguage
+    : undefined
 
-  console.log('<<< lambda search-notion', searchParams)
-  const results = normalizeSearchResults(await search(searchParams))
+  console.log('<<< lambda search-notion', notionSearchParams)
+  const results = filterSearchResultsByLanguage(
+    normalizeSearchResults(await search(notionSearchParams)),
+    language
+  )
   console.log('>>> lambda search-notion', results)
 
   res.setHeader(

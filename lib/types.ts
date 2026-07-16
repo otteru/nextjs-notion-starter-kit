@@ -1,6 +1,12 @@
 import { type ParsedUrlQuery } from 'node:querystring'
 
-import { type ExtendedRecordMap, type PageMap } from 'notion-types'
+import {
+  type ExtendedRecordMap,
+  type PageMap,
+  type SearchParams
+} from 'notion-types'
+
+import { type SiteLanguage } from './site-language'
 
 export * from 'notion-types'
 
@@ -16,6 +22,10 @@ export interface PageProps {
   recordMap?: ExtendedRecordMap
   pageId?: string
   error?: PageError
+}
+
+export type LocalizedSearchParams = SearchParams & {
+  language?: SiteLanguage
 }
 
 export interface ExtendedTweetRecordMap extends ExtendedRecordMap {

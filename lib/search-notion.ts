@@ -5,12 +5,12 @@ import type * as types from './types'
 import { api } from './config'
 
 export const searchNotion = pMemoize(searchNotionImpl, {
-  cacheKey: (args) => args[0]?.query,
+  cacheKey: (args) => `${args[0]?.language || 'ko'}:${args[0]?.query || ''}`,
   cache: new ExpiryMap(10_000)
 })
 
 async function searchNotionImpl(
-  params: types.SearchParams
+  params: types.LocalizedSearchParams
 ): Promise<types.SearchResults> {
   return fetch(api.searchNotion, {
     method: 'POST',
