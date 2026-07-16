@@ -27,6 +27,7 @@ import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
+import { getSiteSection } from '@/lib/site-section'
 import { useDarkMode } from '@/lib/use-dark-mode'
 
 import { BlogCategorySidebar } from './BlogCategorySidebar'
@@ -190,8 +191,6 @@ const propertyTextValue = (
   return defaultFn()
 }
 
-type SiteSection = 'blog' | 'project' | 'about'
-
 export function NotionPage({
   site,
   recordMap,
@@ -224,8 +223,7 @@ export function NotionPage({
 
   const { isDarkMode } = useDarkMode()
   const [isShowingSearch, setIsShowingSearch] = React.useState(false)
-  const [selectedSection, setSelectedSection] =
-    React.useState<SiteSection>('blog')
+  const selectedSection = getSiteSection(router.asPath)
   const [selectedBlogCategory, setSelectedBlogCategory] =
     React.useState<string>()
   const [selectedProjectCategory, setSelectedProjectCategory] =
@@ -240,20 +238,6 @@ export function NotionPage({
 
     return () => {
       window.removeEventListener('yudam:open-search', openSearch)
-    }
-  }, [])
-
-  React.useEffect(() => {
-    const updateSection = (event: Event) => {
-      const section = (event as CustomEvent<SiteSection>).detail
-
-      setSelectedSection(section)
-    }
-
-    window.addEventListener('yudam:section-change', updateSection)
-
-    return () => {
-      window.removeEventListener('yudam:section-change', updateSection)
     }
   }, [])
 

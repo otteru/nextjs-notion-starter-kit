@@ -6,14 +6,17 @@ import * as React from 'react'
 
 import { rootNotionPageId } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
+import {
+  getSiteSection,
+  getSiteSectionPath,
+  type SiteSection
+} from '@/lib/site-section'
 import { type PageProps } from '@/lib/types'
 
 import styles from './SiteTopNav.module.css'
 
-type NavTab = 'blog' | 'project' | 'about'
-
 type NavItem = {
-  id: NavTab
+  id: SiteSection
   label: string
   icon: React.ReactNode
 }
@@ -66,14 +69,6 @@ const navItems: NavItem[] = [
 const brandFallbackIcon =
   'https://www.notion.so/image/attachment%3Acd72c5bd-4317-45dc-a0a9-61262a752329%3Aimage.png?table=block&id=27f21026-1e95-8069-953e-d9a1aa6a8269&cache=v2'
 
-function getInitialTab(pathname: string): NavTab {
-  if (pathname.startsWith('/about') || pathname.startsWith('/resume')) {
-    return 'about'
-  }
-
-  return 'blog'
-}
-
 function getRootBlock(recordMap?: ExtendedRecordMap): Block | undefined {
   const blockId =
     Object.keys(recordMap?.block || {}).find(
@@ -112,24 +107,6 @@ function openSearch() {
   window.dispatchEvent(new CustomEvent('yudam:open-search'))
 }
 
-function notifySectionChange(section: NavTab) {
-  window.dispatchEvent(
-    new CustomEvent('yudam:section-change', { detail: section })
-  )
-}
-
-function getTabPath(tab: NavTab) {
-  if (tab === 'about') {
-    return '/about'
-  }
-
-  return '/'
-}
-
-function getCurrentPath(asPath: string) {
-  return asPath.split('?')[0]?.split('#')[0] || '/'
-}
-
 export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
   const router = useRouter()
   const rootBlock = React.useMemo(() => getRootBlock(recordMap), [recordMap])
@@ -137,13 +114,7 @@ export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
     () => getBrandIcon(rootBlock, recordMap),
     [rootBlock, recordMap]
   )
-  const [activeTab, setActiveTab] = React.useState<NavTab>(() =>
-    getInitialTab(getCurrentPath(router.asPath))
-  )
-
-  React.useEffect(() => {
-    setActiveTab(getInitialTab(getCurrentPath(router.asPath)))
-  }, [router.asPath])
+  const activeTab = getSiteSection(router.asPath)
 
   return (
     <nav className={styles.topNav} aria-label='Primary navigation'>
@@ -183,24 +154,10 @@ export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
                 role='tab'
                 aria-selected={isActive}
                 onClick={() => {
-                  setActiveTab(item.id)
-                  const tabPath = getTabPath(item.id)
-                  const currentPath = getCurrentPath(router.asPath)
+                  const tabPath = getSiteSectionPath(item.id)
 
-                  if (item.id === 'about') {
-                    if (currentPath !== tabPath) {
-                      void router.push(tabPath)
-                    }
-
-                    return
-                  }
-
-                  if (currentPath !== tabPath) {
-                    void router.push(tabPath).then(() => {
-                      notifySectionChange(item.id)
-                    })
-                  } else {
-                    notifySectionChange(item.id)
+                  if (router.asPath !== tabPath) {
+                    void router.push(tabPath)
                   }
                 }}
               >
