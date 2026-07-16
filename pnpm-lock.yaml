@@ -36,7 +36,7 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       next:
-        specifier: ^15.5.9
+        specifier: 15.5.9
         version: 15.5.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       notion-client:
         specifier: ^7.5.1
