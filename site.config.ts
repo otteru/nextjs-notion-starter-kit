@@ -47,7 +47,8 @@ export default siteConfig({
   //   '/bar': '0be6efce9daf42688f65c76b89f8eb27'
   // }
   pageUrlOverrides: {
-    '/about': '38b210261e95805d8028c9f2ed6a863a'
+    '/ko/about': '38b210261e95805d8028c9f2ed6a863a',
+    '/en/about': '38b210261e9580c1ab60e0cc8151cc4d'
   },
 
   // whether to use the default notion navigation style or a custom one with links to

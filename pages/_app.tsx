@@ -64,7 +64,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <SiteTopNav recordMap={pageProps.recordMap} />
+      <SiteTopNav recordMap={pageProps.recordMap} pageId={pageProps.pageId} />
       <Component {...pageProps} />
     </>
   )
