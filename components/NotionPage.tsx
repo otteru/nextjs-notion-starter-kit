@@ -21,14 +21,23 @@ import {
   filterRecordMapByPart,
   filterRecordMapByProject,
   getBlogCategories,
-  getProjectCategories
+  getBlogPostCount,
+  getProjectCategories,
+  getProjectPostCount
 } from '@/lib/blog-categories'
 import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
-import { getSiteSection } from '@/lib/site-section'
+import {
+  getLocalizedPagePath,
+  getPageBlock,
+  getPageLanguage,
+  hideInternalPageProperties
+} from '@/lib/site-language'
 import { useDarkMode } from '@/lib/use-dark-mode'
+import { useSiteLanguage } from '@/lib/use-site-language'
+import { useSiteSection } from '@/lib/use-site-section'
 
 import { BlogCategorySidebar } from './BlogCategorySidebar'
 import { Footer } from './Footer'
@@ -223,7 +232,8 @@ export function NotionPage({
 
   const { isDarkMode } = useDarkMode()
   const [isShowingSearch, setIsShowingSearch] = React.useState(false)
-  const selectedSection = getSiteSection(router.asPath)
+  const selectedSection = useSiteSection()
+  const siteLanguage = useSiteLanguage(recordMap, pageId)
   const [selectedBlogCategory, setSelectedBlogCategory] =
     React.useState<string>()
   const [selectedProjectCategory, setSelectedProjectCategory] =
@@ -246,7 +256,28 @@ export function NotionPage({
     if (lite) params.lite = lite
 
     const searchParams = new URLSearchParams(params)
-    return site ? mapPageUrl(site, recordMap!, searchParams) : undefined
+    const defaultMapPageUrl = site
+      ? mapPageUrl(site, recordMap!, searchParams)
+      : undefined
+
+    if (!defaultMapPageUrl || !recordMap) {
+      return undefined
+    }
+
+    return (targetPageId = '') => {
+      const targetLanguage = getPageLanguage(
+        getPageBlock(recordMap, targetPageId),
+        recordMap
+      )
+
+      if (!targetLanguage) {
+        return defaultMapPageUrl(targetPageId)
+      }
+
+      const path = getLocalizedPagePath(targetLanguage, targetPageId)
+      const query = searchParams.toString()
+      return query ? `${path}?${query}` : path
+    }
   }, [site, recordMap, lite])
 
   const keys = Object.keys(recordMap?.block || {})
@@ -258,12 +289,20 @@ export function NotionPage({
     block?.type === 'page' && block?.parent_table === 'collection'
   const isRootPage = pageId === site?.rootNotionPageId
   const blogCategories = React.useMemo(
-    () => (recordMap ? getBlogCategories(recordMap) : []),
-    [recordMap]
+    () => (recordMap ? getBlogCategories(recordMap, siteLanguage) : []),
+    [recordMap, siteLanguage]
   )
   const projectCategories = React.useMemo(
-    () => (recordMap ? getProjectCategories(recordMap) : []),
-    [recordMap]
+    () => (recordMap ? getProjectCategories(recordMap, siteLanguage) : []),
+    [recordMap, siteLanguage]
+  )
+  const blogPostCount = React.useMemo(
+    () => (recordMap ? getBlogPostCount(recordMap, siteLanguage) : 0),
+    [recordMap, siteLanguage]
+  )
+  const projectPostCount = React.useMemo(
+    () => (recordMap ? getProjectPostCount(recordMap, siteLanguage) : 0),
+    [recordMap, siteLanguage]
   )
 
   React.useEffect(() => {
@@ -276,7 +315,7 @@ export function NotionPage({
         return currentCategory
       }
 
-      return blogCategories[0]?.name
+      return undefined
     })
   }, [blogCategories])
 
@@ -290,31 +329,50 @@ export function NotionPage({
         return currentCategory
       }
 
-      return projectCategories[0]?.name
+      return undefined
     })
   }, [projectCategories])
 
   const visibleRecordMap = React.useMemo(() => {
-    if (!recordMap || !isRootPage) {
-      return recordMap
+    if (!recordMap) {
+      return undefined
+    }
+
+    if (!isRootPage) {
+      return hideInternalPageProperties(recordMap)
     }
 
     if (selectedSection === 'blog') {
-      return filterRecordMapByPart(recordMap, selectedBlogCategory)
+      return hideInternalPageProperties(
+        filterRecordMapByPart(recordMap, selectedBlogCategory, siteLanguage)
+      )
     }
 
     if (selectedSection === 'project') {
-      return filterRecordMapByProject(recordMap, selectedProjectCategory)
+      return hideInternalPageProperties(
+        filterRecordMapByProject(
+          recordMap,
+          selectedProjectCategory,
+          siteLanguage
+        )
+      )
     }
 
-    return recordMap
+    return hideInternalPageProperties(recordMap)
   }, [
     isRootPage,
     recordMap,
     selectedBlogCategory,
     selectedProjectCategory,
-    selectedSection
+    selectedSection,
+    siteLanguage
   ])
+
+  const localizedSearchNotion = React.useCallback(
+    (params: types.SearchParams) =>
+      searchNotion({ ...params, language: siteLanguage }),
+    [siteLanguage]
+  )
 
   const showTableOfContents = !!isBlogPost
   const minTableOfContentsItems = 3
@@ -409,7 +467,9 @@ export function NotionPage({
         defaultPageCoverPosition={config.defaultPageCoverPosition}
         mapPageUrl={siteMapPageUrl}
         mapImageUrl={mapImageUrl}
-        searchNotion={config.isSearchEnabled ? searchNotion : undefined}
+        searchNotion={
+          config.isSearchEnabled ? localizedSearchNotion : undefined
+        }
         isShowingSearch={isShowingSearch}
         onHideSearch={() => setIsShowingSearch(false)}
         header={
@@ -424,6 +484,7 @@ export function NotionPage({
             <BlogCategorySidebar
               title='Part'
               categories={blogCategories}
+              allCount={blogPostCount}
               activeCategory={selectedBlogCategory}
               onSelectCategory={setSelectedBlogCategory}
             />
@@ -431,6 +492,7 @@ export function NotionPage({
             <BlogCategorySidebar
               title='Project'
               categories={projectCategories}
+              allCount={projectPostCount}
               activeCategory={selectedProjectCategory}
               onSelectCategory={setSelectedProjectCategory}
             />

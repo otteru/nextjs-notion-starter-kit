@@ -7,23 +7,35 @@ import styles from './BlogCategorySidebar.module.css'
 export function BlogCategorySidebar({
   title = 'Part',
   categories,
+  allCount,
   activeCategory,
   onSelectCategory
 }: {
   title?: string
   categories: BlogCategory[]
+  allCount: number
   activeCategory?: string
-  onSelectCategory: (category: string) => void
+  onSelectCategory: (category?: string) => void
 }) {
   if (!categories.length) {
     return null
   }
 
   return (
-    <aside className={styles.sidebar} aria-label='Blog categories'>
+    <aside className={styles.sidebar} aria-label={`${title} categories`}>
       <p className={styles.title}>{title}</p>
 
       <div className={styles.list}>
+        <button
+          type='button'
+          className={`${styles.button} ${activeCategory === undefined ? styles.active : ''}`}
+          aria-pressed={activeCategory === undefined}
+          onClick={() => onSelectCategory(undefined)}
+        >
+          <span>All</span>
+          <span className={styles.count}>{allCount}</span>
+        </button>
+
         {categories.map((category) => {
           const isActive = category.name === activeCategory
 

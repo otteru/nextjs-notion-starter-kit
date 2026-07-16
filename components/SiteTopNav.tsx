@@ -7,11 +7,15 @@ import * as React from 'react'
 import { rootNotionPageId } from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import {
-  getSiteSection,
-  getSiteSectionPath,
-  type SiteSection
-} from '@/lib/site-section'
+  getLocalizedPagePath,
+  getPageBlock,
+  getTranslationPageId,
+  type SiteLanguage
+} from '@/lib/site-language'
+import { getSiteSectionPath, type SiteSection } from '@/lib/site-section'
 import { type PageProps } from '@/lib/types'
+import { useSiteLanguage } from '@/lib/use-site-language'
+import { useSiteSection } from '@/lib/use-site-section'
 
 import styles from './SiteTopNav.module.css'
 
@@ -107,14 +111,45 @@ function openSearch() {
   window.dispatchEvent(new CustomEvent('yudam:open-search'))
 }
 
-export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
+export function SiteTopNav({
+  recordMap,
+  pageId
+}: Pick<PageProps, 'recordMap' | 'pageId'>) {
   const router = useRouter()
   const rootBlock = React.useMemo(() => getRootBlock(recordMap), [recordMap])
   const brandIcon = React.useMemo(
     () => getBrandIcon(rootBlock, recordMap),
     [rootBlock, recordMap]
   )
-  const activeTab = getSiteSection(router.asPath)
+  const activeTab = useSiteSection()
+  const language = useSiteLanguage(recordMap, pageId)
+  const currentBlock = React.useMemo(
+    () => getPageBlock(recordMap, pageId),
+    [pageId, recordMap]
+  )
+  const translationPageId = React.useMemo(
+    () => getTranslationPageId(currentBlock, recordMap),
+    [currentBlock, recordMap]
+  )
+  const isRootPage =
+    pageId?.replaceAll('-', '') === rootNotionPageId.replaceAll('-', '')
+
+  const getLanguagePath = React.useCallback(
+    (targetLanguage: SiteLanguage): string | undefined => {
+      if (isRootPage) {
+        return getSiteSectionPath(activeTab, targetLanguage)
+      }
+
+      if (targetLanguage === language) {
+        return router.asPath
+      }
+
+      return translationPageId
+        ? getLocalizedPagePath(targetLanguage, translationPageId)
+        : undefined
+    },
+    [activeTab, isRootPage, language, router.asPath, translationPageId]
+  )
 
   return (
     <nav className={styles.topNav} aria-label='Primary navigation'>
@@ -154,7 +189,7 @@ export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
                 role='tab'
                 aria-selected={isActive}
                 onClick={() => {
-                  const tabPath = getSiteSectionPath(item.id)
+                  const tabPath = getSiteSectionPath(item.id, language)
 
                   if (router.asPath !== tabPath) {
                     void router.push(tabPath)
@@ -175,6 +210,33 @@ export function SiteTopNav({ recordMap }: Pick<PageProps, 'recordMap'>) {
         </div>
 
         <div className={styles.rightArea}>
+          <div className={styles.languageSwitch} aria-label='Language'>
+            {(['ko', 'en'] as const).map((option) => {
+              const languagePath = getLanguagePath(option)
+              const isActive = language === option
+              const isDisabled = !isActive && !languagePath
+
+              return (
+                <button
+                  key={option}
+                  type='button'
+                  className={`${styles.languageButton} ${
+                    isActive ? styles.activeLanguage : ''
+                  }`}
+                  aria-pressed={isActive}
+                  disabled={isDisabled}
+                  onClick={() => {
+                    if (!isActive && languagePath) {
+                      void router.push(languagePath)
+                    }
+                  }}
+                >
+                  {option.toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+
           <button
             type='button'
             className={styles.searchButton}
