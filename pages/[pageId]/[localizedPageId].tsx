@@ -47,7 +47,7 @@ export const getStaticProps: GetStaticProps<
       }
     }
 
-    return { props, revalidate: 10 }
+    return { props, revalidate: 3600 }
   } catch (err) {
     console.error('localized page error', domain, language, routePageId, err)
     throw err

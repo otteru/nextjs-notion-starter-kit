@@ -6,7 +6,7 @@ import { type PageProps } from '@/lib/types'
 export const getStaticProps = async () => {
   try {
     const props = await resolveNotionPage(domain, 'ko/about')
-    return { props, revalidate: 10 }
+    return { props, revalidate: 3600 }
   } catch (err) {
     console.error('legacy about page error', domain, err)
     throw err
