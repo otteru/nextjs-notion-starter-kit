@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { type Block, type ExtendedRecordMap } from 'notion-types'
 import { getBlockIcon, isUrl } from 'notion-utils'
@@ -155,7 +156,11 @@ export function SiteTopNav({
     <nav className={styles.topNav} aria-label='Primary navigation'>
       <div className={styles.inner}>
         <div className={styles.leftArea}>
-          <div className={styles.brand}>
+          <Link
+            className={styles.brand}
+            href={getSiteSectionPath('blog', language)}
+            aria-label='Go to blog home'
+          >
             {brandIcon?.type === 'image' ? (
               <Image
                 className={styles.brandMark}
@@ -174,7 +179,7 @@ export function SiteTopNav({
             <div className={styles.brandText}>
               <span className={styles.brandTitle}>Yudam&apos;s Blog</span>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className={styles.tabs} role='tablist' aria-label='Sections'>

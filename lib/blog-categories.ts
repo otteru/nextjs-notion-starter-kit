@@ -172,12 +172,10 @@ function getPageTimestampMap(
         return []
       }
 
-      const publishedTime = getPageProperty<number>(
-        'Published',
-        block as PageBlock,
-        recordMap
-      )
-      const timestamp = publishedTime || block.created_time
+      const publishedTime =
+        getPageProperty<number>('날짜', block as PageBlock, recordMap) ??
+        getPageProperty<number>('Published', block as PageBlock, recordMap)
+      const timestamp = publishedTime ?? block.created_time
 
       return timestamp ? [[normalizeId(block.id), timestamp] as const] : []
     })
