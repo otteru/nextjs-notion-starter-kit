@@ -1,0 +1,101 @@
+.container {
+  width: 100%;
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  overflow-x: auto;
+  background: rgba(249, 250, 251, 1);
+  border: 1px solid rgba(229, 231, 235, 1);
+  border-radius: 0.75rem;
+}
+
+.diagram {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.diagram :global(svg) {
+  display: block;
+  width: 100%;
+  max-width: 100% !important;
+  height: auto;
+}
+
+.loading {
+  min-height: 12rem;
+  background: linear-gradient(
+    110deg,
+    rgba(229, 231, 235, 0.7) 8%,
+    rgba(243, 244, 246, 0.9) 18%,
+    rgba(229, 231, 235, 0.7) 33%
+  );
+  background-size: 200% 100%;
+  border-radius: 0.5rem;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.fallback {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  color: rgba(31, 41, 55, 1);
+  white-space: pre;
+  background: rgba(254, 242, 242, 1);
+  border: 1px solid rgba(254, 202, 202, 1);
+  border-radius: 0.5rem;
+}
+
+.errorMessage {
+  margin: 0 0 0.75rem;
+  color: rgba(185, 28, 28, 1);
+  font-size: 0.875rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:global(.dark-mode) .container {
+  background: rgba(17, 24, 39, 1);
+  border-color: rgba(55, 65, 81, 1);
+}
+
+:global(.dark-mode) .loading {
+  background: linear-gradient(
+    110deg,
+    rgba(31, 41, 55, 0.8) 8%,
+    rgba(55, 65, 81, 0.9) 18%,
+    rgba(31, 41, 55, 0.8) 33%
+  );
+  background-size: 200% 100%;
+}
+
+:global(.dark-mode) .fallback {
+  color: rgba(229, 231, 235, 1);
+  background: rgba(69, 10, 10, 0.35);
+  border-color: rgba(153, 27, 27, 0.7);
+}
+
+:global(.dark-mode) .errorMessage {
+  color: rgba(252, 165, 165, 1);
+}
+
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media only screen and (max-width: 720px) {
+  .container {
+    padding: 1rem;
+  }
+}
