@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/legacy/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { type PageBlock } from 'notion-types'
+import { type CodeBlock, type PageBlock } from 'notion-types'
 import { formatDate, getBlockTitle, getPageProperty } from 'notion-utils'
 import * as React from 'react'
 import BodyClassName from 'react-body-classname'
@@ -42,6 +42,7 @@ import { useSiteSection } from '@/lib/use-site-section'
 import { BlogCategorySidebar } from './BlogCategorySidebar'
 import { Footer } from './Footer'
 import { Loading } from './Loading'
+import { MermaidCode } from './MermaidCode'
 import { NotionPageHeader } from './NotionPageHeader'
 import { Page404 } from './Page404'
 import { PageAside } from './PageAside'
@@ -52,7 +53,7 @@ import styles from './styles.module.css'
 // dynamic imports for optional components
 // -----------------------------------------------------------------------------
 
-const Code = dynamic(() =>
+const PrismCode = dynamic(() =>
   import('react-notion-x/build/third-party/code').then(async (m) => {
     // add / remove any prism syntaxes here
     await Promise.allSettled([
@@ -122,6 +123,30 @@ const Code = dynamic(() =>
     return m.Code
   })
 )
+
+interface CodeProps {
+  block: CodeBlock
+  defaultLanguage?: string
+  className?: string
+}
+
+function Code({ block, defaultLanguage = 'typescript', className }: CodeProps) {
+  const language = (
+    block.properties.language?.[0]?.[0] || defaultLanguage
+  ).toLowerCase()
+
+  if (language === 'mermaid') {
+    return <MermaidCode block={block} className={className} />
+  }
+
+  return (
+    <PrismCode
+      block={block}
+      className={className}
+      defaultLanguage={defaultLanguage}
+    />
+  )
+}
 
 const Collection = dynamic(() =>
   import('react-notion-x/build/third-party/collection').then(
