@@ -10,7 +10,7 @@ export default siteConfig({
 
   // basic site info (required)
   name: "Yudam's Blog",
-  domain: 'yudam.com',
+  domain: 'otteru.vercel.app',
   author: 'Yudam Kim',
 
   // open graph metadata (optional)
