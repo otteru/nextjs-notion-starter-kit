@@ -1,8 +1,9 @@
 import type { GetServerSideProps } from 'next'
 
 import type { SiteMap } from '@/lib/types'
-import { host } from '@/lib/config'
+import { getPublicPageIds } from '@/lib/get-public-page-ids'
 import { getSiteMap } from '@/lib/get-site-map'
+import { getCanonicalPageUrl } from '@/lib/map-page-url'
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   if (req.method !== 'GET') {
@@ -31,28 +32,37 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   }
 }
 
-const createSitemap = (siteMap: SiteMap) =>
-  `<?xml version="1.0" encoding="UTF-8"?>
+const createSitemap = (siteMap: SiteMap): string => {
+  const urls = [
+    `https://${siteMap.site.domain}/`,
+    ...getPublicPageIds(siteMap).map((pageId) =>
+      getCanonicalPageUrl(siteMap.site, siteMap.pageMap[pageId]!)(pageId)
+    )
+  ]
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-      <loc>${host}</loc>
-    </url>
-
-    <url>
-      <loc>${host}/</loc>
-    </url>
-
-    ${Object.keys(siteMap.canonicalPageMap)
-      .map((canonicalPagePath) =>
+    ${[...new Set(urls)]
+      .map((url) =>
         `
           <url>
-            <loc>${host}/${canonicalPagePath}</loc>
+            <loc>${escapeXml(url)}</loc>
           </url>
         `.trim()
       )
       .join('')}
   </urlset>
 `
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;')
+}
 
 export default function noop() {
   return null

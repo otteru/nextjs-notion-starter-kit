@@ -4,13 +4,9 @@ import { type GetStaticProps } from 'next'
 
 import { NotionPage } from '@/components/NotionPage'
 import { domain } from '@/lib/config'
+import { getCanonicalPagePath } from '@/lib/map-page-url'
 import { resolveNotionPage } from '@/lib/resolve-notion-page'
-import {
-  getLocalizedPagePath,
-  getPageBlock,
-  getPageLanguage,
-  isSiteLanguage
-} from '@/lib/site-language'
+import { isSiteLanguage } from '@/lib/site-language'
 import { type PageProps } from '@/lib/types'
 
 interface LocalizedPageParams extends ParsedUrlQuery {
@@ -33,16 +29,21 @@ export const getStaticProps: GetStaticProps<
 
   try {
     const props = await resolveNotionPage(domain, rawPageId)
-    const actualLanguage = getPageLanguage(
-      getPageBlock(props.recordMap, props.pageId),
-      props.recordMap
-    )
+    if (props.error?.statusCode === 404) {
+      return { notFound: true, revalidate: 3600 }
+    }
 
-    if (actualLanguage && actualLanguage !== language && props.pageId) {
-      return {
-        redirect: {
-          destination: getLocalizedPagePath(actualLanguage, props.pageId),
-          permanent: false
+    if (!props.error && props.site && props.recordMap && props.pageId) {
+      const destination = getCanonicalPagePath(
+        props.site,
+        props.recordMap,
+        props.pageId
+      )
+
+      if (destination !== `/${context.params?.pageId}/${routePageId}`) {
+        return {
+          redirect: { destination, permanent: true },
+          revalidate: 3600
         }
       }
     }

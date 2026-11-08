@@ -9,9 +9,11 @@ import {
 import RSS from 'rss'
 
 import * as config from '@/lib/config'
+import { getPublicPageIds } from '@/lib/get-public-page-ids'
 import { getSiteMap } from '@/lib/get-site-map'
 import { getSocialImageUrl } from '@/lib/get-social-image-url'
 import { getCanonicalPageUrl } from '@/lib/map-page-url'
+import { getPageBlock } from '@/lib/site-language'
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   if (req.method !== 'GET') {
@@ -34,13 +36,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     ttl: ttlMinutes
   })
 
-  for (const pagePath of Object.keys(siteMap.canonicalPageMap)) {
-    const pageId = siteMap.canonicalPageMap[pagePath]!
+  for (const pageId of getPublicPageIds(siteMap)) {
     const recordMap = siteMap.pageMap[pageId] as ExtendedRecordMap
     if (!recordMap) continue
 
-    const keys = Object.keys(recordMap?.block || {})
-    const block = recordMap?.block?.[keys[0]!]?.value
+    const block = getPageBlock(recordMap, pageId)
     if (!block) continue
 
     const parentPage = getBlockParentPage(block, recordMap)
