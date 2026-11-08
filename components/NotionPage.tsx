@@ -29,12 +29,7 @@ import * as config from '@/lib/config'
 import { mapImageUrl } from '@/lib/map-image-url'
 import { getCanonicalPageUrl, mapPageUrl } from '@/lib/map-page-url'
 import { searchNotion } from '@/lib/search-notion'
-import {
-  getLocalizedPagePath,
-  getPageBlock,
-  getPageLanguage,
-  hideInternalPageProperties
-} from '@/lib/site-language'
+import { getPageBlock, hideInternalPageProperties } from '@/lib/site-language'
 import { useDarkMode } from '@/lib/use-dark-mode'
 import { useSiteLanguage } from '@/lib/use-site-language'
 import { useSiteSection } from '@/lib/use-site-section'
@@ -277,36 +272,15 @@ export function NotionPage({
   }, [])
 
   const siteMapPageUrl = React.useMemo(() => {
-    const params: any = {}
-    if (lite) params.lite = lite
-
-    const searchParams = new URLSearchParams(params)
-    const defaultMapPageUrl = site
-      ? mapPageUrl(site, recordMap!, searchParams)
-      : undefined
-
-    if (!defaultMapPageUrl || !recordMap) {
+    if (!site || !recordMap) {
       return undefined
     }
 
-    return (targetPageId = '') => {
-      const targetLanguage = getPageLanguage(
-        getPageBlock(recordMap, targetPageId),
-        recordMap
-      )
-
-      if (!targetLanguage) {
-        return defaultMapPageUrl(targetPageId)
-      }
-
-      const path = getLocalizedPagePath(targetLanguage, targetPageId)
-      const query = searchParams.toString()
-      return query ? `${path}?${query}` : path
-    }
+    const searchParams = new URLSearchParams(lite ? { lite } : {})
+    return mapPageUrl(site, recordMap, searchParams)
   }, [site, recordMap, lite])
 
-  const keys = Object.keys(recordMap?.block || {})
-  const block = recordMap?.block?.[keys[0]!]?.value
+  const block = getPageBlock(recordMap, pageId)
 
   // const isRootPage =
   //   parsePageId(block?.id) === parsePageId(site?.rootNotionPageId)
@@ -419,7 +393,7 @@ export function NotionPage({
     return <Loading />
   }
 
-  if (error || !site || !block) {
+  if (error || !site || !recordMap || !block) {
     return <Page404 site={site} pageId={pageId} error={error} />
   }
 

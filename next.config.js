@@ -10,6 +10,15 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 export default withBundleAnalyzer({
   staticPageGenerationTimeout: 300,
+  async redirects() {
+    return [
+      {
+        source: '/about',
+        destination: '/ko/about',
+        permanent: true
+      }
+    ]
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'www.notion.so' },

@@ -2,6 +2,7 @@ import { type GetStaticProps } from 'next'
 
 import { NotionPage } from '@/components/NotionPage'
 import { domain } from '@/lib/config'
+import { getCanonicalPagePath } from '@/lib/map-page-url'
 import { resolveNotionPage } from '@/lib/resolve-notion-page'
 import { type PageProps, type Params } from '@/lib/types'
 
@@ -12,6 +13,25 @@ export const getStaticProps: GetStaticProps<PageProps, Params> = async (
 
   try {
     const props = await resolveNotionPage(domain, rawPageId)
+
+    if (props.error?.statusCode === 404) {
+      return { notFound: true, revalidate: 3600 }
+    }
+
+    if (!props.error && props.site && props.recordMap && props.pageId) {
+      const destination = getCanonicalPagePath(
+        props.site,
+        props.recordMap,
+        props.pageId
+      )
+
+      if (destination !== `/${rawPageId}`) {
+        return {
+          redirect: { destination, permanent: true },
+          revalidate: 3600
+        }
+      }
+    }
 
     return { props, revalidate: 3600 }
   } catch (err) {
